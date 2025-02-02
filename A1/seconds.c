@@ -21,8 +21,8 @@
 #define BUFFER_SIZE 128
 
 #define PROC_NAME "seconds"
-//#define MESSAGE "Hello World\n"
 
+//define variables
 static unsigned long jiffies_start;
 static unsigned long elapsed_seconds;
 
@@ -40,11 +40,10 @@ static struct file_operations proc_ops = {
 /* This function is called when the module is loaded. */
 int proc_init(void)
 {       
+	//get initial jiffies to get elapsed time
         jiffies_start = jiffies;
         proc_create(PROC_NAME, 0, NULL, &proc_ops);
-
         printk(KERN_INFO "/proc/%s created\n", PROC_NAME);
-        //printk(KERN_INFO "jiffies_start is %d\n", jiffies_start);
 
 	return 0;
 }
@@ -52,14 +51,14 @@ int proc_init(void)
 /* This function is called when the module is removed. */
 void proc_exit(void) {
 
-        // removes the /proc/hello entry
+        // removes the /proc/seconds entry
         remove_proc_entry(PROC_NAME, NULL);
 
         printk( KERN_INFO "/proc/%s removed\n", PROC_NAME);
 }
 
 /**
- * This function is called each time the /proc/hello is read.
+ * This function is called each time the /proc/seconds is read.
  * 
  * This function is called repeatedly until it returns 0, so
  * there must be logic that ensures it ultimately returns 0
@@ -85,10 +84,8 @@ ssize_t proc_read(struct file *file, char __user *usr_buf, size_t count, loff_t 
         }
 
         completed = 1;
-        
+	//calculate elapsed time
         elapsed_seconds = (jiffies-jiffies_start)/HZ;
-
-
         rv = sprintf(buffer,"Elapsed seconds: %lu\n", elapsed_seconds);
 
         // copies the contents of buffer to userspace usr_buf
