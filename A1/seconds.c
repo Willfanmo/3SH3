@@ -1,4 +1,9 @@
 /**
+ * Distributor ID: Ubuntu
+ * Description:    Ubuntu 16.04.5 LTS
+ * Release:        16.04
+ * Codename:       xenial
+ * Kernel Version: 4.40-87-generic
  * hello_oldKernel.c
  *
  * Kernel module that communicates with /proc file system.
