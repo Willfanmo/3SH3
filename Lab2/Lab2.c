@@ -9,14 +9,14 @@ int main(int argc, char *argv[])
 {
     pthread_t tid; //thread identifier
     pthread_attr_t attr; // set of thread attributes
-
+    printf("s");
     //set default attributes of thread
     pthread_attr_init(&attr);
 
-    pthread_create(&tid, &attr, runner, arv[1]);
+    pthread_create(&tid, &attr, runner, argv[1]);
 
     //wait for thread to exit
-    pthread_join(tid,NuLL);
+    pthread_join(tid, NULL);
 
     printf("sum = %d\n", sum);
 }
