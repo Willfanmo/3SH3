@@ -13,7 +13,7 @@ int main(int argc, char *argv[])
     //set default attributes of thread
     pthread_attr_init(&attr);
 
-    pthread_create(&tid, &attr, runner, argv[1]);
+    pthread_create(&tid, &attr, &runner, argv[1]);
 
     //wait for thread to exit
     pthread_join(tid, NULL);
