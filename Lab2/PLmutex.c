@@ -13,9 +13,11 @@ void *deposit(void *param)
 {
     int i,upper =atoi(param);
     
-    pthread_mutex_lock(&mutex);
+    if(pthread_mutex_lock(&mutex)!=0)
+     printf("Error in mutex_lock");
     amount+=upper;
-    pthread_mutex_unlock(&mutex);
+    if(pthread_mutex_unlock(&mutex)!=)
+     printf("Error in mutex_unlock");
 
     printf("Deposite amount%d\n",amount);
     pthread_exit(0);
@@ -26,9 +28,11 @@ void *withdraw(void *param)
 {
     int i,upper =atoi(param);
     
-    pthread_mutex_lock(&mutex);
+    if(pthread_mutex_lock(&mutex)!=0)
+     printf("Error in mutex_lock");
     amount-=upper;
-    pthread_mutex_unlock(&mutex);
+    if(pthread_mutex_unlock(&mutex)!=0)
+     printf("Error in mutex_unlock");
     
     printf("Withdraw amount%d\n",amount);
     pthread_exit(0);
