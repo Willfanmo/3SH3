@@ -16,7 +16,7 @@ void *deposit(void *param)
     if(pthread_mutex_lock(&mutex)!=0)
      printf("Error in mutex_lock");
     amount+=upper;
-    if(pthread_mutex_unlock(&mutex)!=)
+    if(pthread_mutex_unlock(&mutex)!=0)
      printf("Error in mutex_unlock");
 
     printf("Deposite amount%d\n",amount);
