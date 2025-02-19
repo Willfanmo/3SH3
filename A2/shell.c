@@ -5,22 +5,27 @@
 
 int main(void)
 {
-char args[MAX_LINE/2+1];
+char cmd[MAX_LINE];
 
 
 int should_run = 1;
 pid_t id;
 
+
 while(should_run){
 	printf("osh>");
 	fflush(stdout);
 
-//	scanf("%41s", args);
-	fgets(args, sizeof(args), stdin);
-	printf("%s   %d   %c\n", args, strlen(args), args[strlen(args)]);
+//	scanf("%41s", cmd);
+	fgets(cmd, sizeof(cmd), stdin);
+	printf("%s   %d   %c\n", cmd, strlen(cmd), cmd[strlen(cmd)]);
 
-	if (args[strlen(args)-2]== '&'){
+	if (cmd[strlen(cmd)-2]== '&'){
 		id = fork();
+		if (id ==0){
+			//exs
+			exit(0);
+		}
 	}
 
 	else{
@@ -31,6 +36,10 @@ while(should_run){
 		}
 		else{
 			printf("child \n");
+			//exec
+//			execv("", cmd);
+			exec(cmd);
+			exit(0);
 		}
 	}
 
