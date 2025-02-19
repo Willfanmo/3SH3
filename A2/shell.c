@@ -38,7 +38,7 @@ while(should_run){
 			printf("child \n");
 			//exec
 //			execv("", cmd);
-			exec(cmd);
+//			exec(cmd);
 			exit(0);
 		}
 	}
