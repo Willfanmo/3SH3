@@ -27,8 +27,11 @@ int student_num;
 int chair_occ = 0;
 int curr_student = 0;
 
+//the ta can only help so many students before lab session is over
+int end_labsession = 10;
+
 void* ta(void *param){
-    while(1){
+    while(end_labsession >=0){
         
         // if sem ==0, student wait
         sem_wait(&sem_s); // TA is available, procecced to the next instruction
@@ -37,9 +40,13 @@ void* ta(void *param){
             printf("Error in mutex_lock");
         
         chair_occ--;
-        printf("TA starts helping student %d\n", curr_student);
+	if (curr_student >0){
+		printf("Ta helped student %d previously\n", curr_student);
+	}
+        printf("TA starts helping a student\n");
         // Assume the time for helping each of the student is from 1-3 sec
         sleep(rand()%3+1);
+	end_labsession--;
         
         if(pthread_mutex_unlock(&mutex)!=0)
             printf("Error in mutex_unlock");
@@ -52,12 +59,15 @@ void* ta(void *param){
             sleep(1);
         }
     }
+	return;
+	pthread_exit(0);
 }
 
 void* student(void *param){
     int id = *((int *)param);
+    int ta_free = 0;
     free(param);
-    while(1){
+    while(end_labsession>=0){
         sleep(rand() % 3 + 1); // Programming time
         printf("Student %d is programming\n", id);
         if(pthread_mutex_lock(&mutex) != 0)
@@ -67,6 +77,7 @@ void* student(void *param){
             chair_occ++;
             sem_post(&sem_s); // Signal TA
             printf("Student %d wants to ask a question\n", id);
+//	    printf("%d\n", sem_ta.count);
             if(pthread_mutex_unlock(&mutex) != 0)
                 printf("Error in mutex_unlock\n");
 //            curr_student = id; 
@@ -79,6 +90,8 @@ void* student(void *param){
                 printf("Error in mutex_unlock\n");
         }
     }
+return;
+    pthread_exit(0);
 }
 
 int main(int argc, char *argv[]) {
@@ -129,7 +142,10 @@ int main(int argc, char *argv[]) {
     }
     
     pthread_mutex_destroy(&mutex);
+	printf("over");
+return 0
     sem_destroy(&sem_ta);
     sem_destroy(&sem_s);
+    printf("lab over\n");
     return 0;
 }
