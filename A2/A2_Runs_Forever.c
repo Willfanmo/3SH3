@@ -25,6 +25,7 @@ sem_t sem_s;
 pthread_mutex_t mutex;
 int student_num;
 int chair_occ = 0;
+int curr_student = 0;
 
 void* ta(void *param){
     while(1){
@@ -36,7 +37,7 @@ void* ta(void *param){
             printf("Error in mutex_lock");
         
         chair_occ--;
-        printf("TA starts helping a student\n");
+        printf("TA starts helping student %d\n", curr_student);
         // Assume the time for helping each of the student is from 1-3 sec
         sleep(rand()%3+1);
         
@@ -44,10 +45,10 @@ void* ta(void *param){
             printf("Error in mutex_unlock");
         
         sem_post(&sem_ta);
-        printf("TA is now available");
+        printf("TA is now available\n");
         
         if (chair_occ ==0){
-            printf("TA is taking a nap");
+            printf("TA is taking a nap\n");
             sleep(1);
         }
     }
@@ -68,7 +69,9 @@ void* student(void *param){
             printf("Student %d wants to ask a question\n", id);
             if(pthread_mutex_unlock(&mutex) != 0)
                 printf("Error in mutex_unlock\n");
+//            curr_student = id; 
             sem_wait(&sem_ta); // Wait for TA to finish
+	    curr_student = id;
         }
         else{
             printf("Student %d will come back later\n", id);
