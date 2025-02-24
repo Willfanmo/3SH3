@@ -2,7 +2,8 @@
 Compilation:
     gcc -pthread A2.c -o A2
 Execution:
-    ./Test
+    ./A2 n
+    where n is the number of student threads
 */
 
 #include <pthread.h>
@@ -14,7 +15,7 @@ Execution:
 #include <time.h>
 
 /*
- * semaphore is like the number of resource that is availbale in the system 
+ * semaphore is like the number of resource that is availible in the system 
  * if s = 0, meaning no resource is available 
  * wait(s): if s>0 then grab it and decrement s by 1
  * signal(s): increment s by 1 
@@ -28,6 +29,7 @@ int chair_occ = 0;
 int curr_student = 0;
 
 //the ta can only help so many students before lab session is over
+//program will end after helping 10 students
 int end_labsession = 10;
 int lab_running= 1;
 
@@ -41,6 +43,7 @@ void* ta(void *param){
         if(pthread_mutex_lock(&mutex)!=0)
             printf("Error in mutex_lock");
         
+	// track number of free seats
         chair_occ--;
 	if (curr_student >0){
 		printf("Ta helped student %d previously\n", curr_student);
@@ -91,10 +94,8 @@ void* student(void *param){
             chair_occ++;
             sem_post(&sem_s); // Signal TA
             printf("Student %d wants to ask a question\n", id);
-//	    printf("%d\n", sem_ta.count);
             if(pthread_mutex_unlock(&mutex) != 0)
                 printf("Error in mutex_unlock\n");
-//            curr_student = id; 
             
             if(!lab_running)
                 break;
