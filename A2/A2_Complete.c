@@ -1,6 +1,6 @@
 /*
 Compilation:
-    gcc -pthread Test.c -o Test
+    gcc -pthread A2.c -o A2
 Execution:
     ./Test
 */
@@ -11,7 +11,7 @@ Execution:
 #include <unistd.h>
 #include <string.h>
 #include <semaphore.h>
-
+#include <time.h>
 
 /*
  * semaphore is like the number of resource that is availbale in the system 
@@ -113,6 +113,7 @@ void* student(void *param){
 
 int main(int argc, char *argv[]) {
     
+    srand(time(NULL));
     student_num = atoi(argv[1]);
     printf("Number of student visiting the office hour is: %d\n",student_num);
     
