@@ -2,7 +2,7 @@
 #include <string.h>
 #include <fcntl.h>
 #include <stdlib.h>
-
+#include <stdio.h>
 /*
 2^16
 logical address space = 16
@@ -38,8 +38,8 @@ int intArray[MEMORY_SIZE];
 
 signed char *mmapfptr;
 
-int page_num = logical_address >> 8; // Get page number
-int offset = logical_address & 0xFF; // Get offset within the page
+//int page_num = logical_address >> 8; // Get page number
+//int offset = logical_address & 0xFF; // Get offset within the page
 
 
 int search_TLB(int page_num) {
@@ -114,7 +114,7 @@ void handle_page_fault(int page_num) {
 
 
 int main(){
-    FILE *address_file = fopen("addresses.txt", "r");
+    FILE *address_file = fopen("addresses_1.txt", "r");
     if (address_file == NULL) {
         perror("Failed to open address file");
         return 1;
