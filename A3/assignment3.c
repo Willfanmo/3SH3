@@ -13,7 +13,9 @@ Page offset = 8
 
 #define BUFFER_SIZE 10
 #define OFFSET_MASK 255 //changed
-#define PAGES 16 //TLB 16 i think this is right
+#define PAGES 256 
+#define TLB_SIZE 16
+#define PHYS_MEM 128
 
 #define OFFSET_BITS 8 //changed
 #define PAGE_SIZE 256 // changed
@@ -21,6 +23,16 @@ Page offset = 8
 #define INT_SIZE 4
 #define INT_COUNT 10
 #define MEMORY_SIZE INT_COUNT*INT_SIZE
+
+typedef struct {
+	int page_num;
+	int frame_num;
+} TLBentry;
+
+int page_table[PAGES];
+int physical_memory[PHYS_MEM];
+
+TLBentry TLB[TLB_SIZE];
 
 int intArray[MEMORY_SIZE];
 
