@@ -30,7 +30,7 @@ typedef struct {
 } TLBentry;
 
 int page_table[PAGES];
-int physical_memory[PHYS_MEM];
+int physical_memory[PHYS_MEM][PAGE_SIZE];
 
 TLBentry TLB[TLB_SIZE];
 
