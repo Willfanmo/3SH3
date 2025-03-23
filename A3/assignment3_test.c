@@ -35,6 +35,9 @@ int physical_memory[PHYS_MEM][PAGE_SIZE];
 TLBentry TLB[TLB_SIZE];
 
 signed char *mmapfptr;
+int total_addr = 0;
+int total_fault = 0;
+int total_hit = 0;
 
 int addr_translation(unsigned short va){
 
@@ -71,9 +74,10 @@ int main(){
     while(fgets(buffer, BUFFER_SIZE, fptr)!=NULL){
 	va = atoi(buffer);
 	pa = addr_translation(va);
-	printf("Virtual address: %d Physical address %d Value=0\n", va, pa);
+	total_addr++;
+	printf("Virtual address: %d Physical address = %d Value=0\n", va, pa);
 }
-
+    printf("Total addresses = %d\nPage_faults = %d\nTLB Hits = %d\n", total_addr, total_fault, total_hit);
     fclose(fptr);
     return 0;
 
