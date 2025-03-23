@@ -3,26 +3,14 @@
 #include <fcntl.h>
 #include <stdlib.h>
 #include <stdio.h>
-/*
-2^16
-logical address space = 16
-
-page size = 256B
-Page offset = 8
-*/
 
 #define BUFFER_SIZE 10
 #define OFFSET_MASK 255 //changed
 #define PAGES 256 
 #define TLB_SIZE 16
 #define PHYS_MEM 128
-
 #define OFFSET_BITS 8 //changed
-#define PAGE_SIZE 256 // changed
-
-#define INT_SIZE 4
-#define INT_COUNT 10
-#define MEMORY_SIZE INT_COUNT*INT_SIZE
+#define PAGE_SIZE 256 // c
 
 typedef struct {
 	int page_num;
@@ -31,31 +19,45 @@ typedef struct {
 
 int page_table[PAGES];
 int physical_memory[PHYS_MEM][PAGE_SIZE];
-
 TLBentry TLB[TLB_SIZE];
-
 signed char *mmapfptr;
 int total_addr = 0;
 int total_fault = 0;
 int total_hit = 0;
 
+/*
+bool TLB_search(int page){
+
+    for(int i=0; i<TLB_SIZE; i++){
+	if(TLB[i]==page)
+		return true;
+    }
+
+    return false;
+}
+*/
+
 int addr_translation(unsigned short va){
 
-int pa;
+    int pa;
+    static int frame_num = 0;
+    int offset = va & OFFSET_MASK;
+    int page = va >> OFFSET_BITS;
 
-static int frame_num = 0;
 
-int offset = va & OFFSET_MASK;
 
-pa = frame_num*256+offset;
 
-if(++frame_num ==128){
-frame_num = 0;
-}
-
+    if(page_table[page] !=-1)
+	pa = page_table[page]*256+offset;
+    
+    else{
+   	pa = frame_num*256+offset;
+	page_table[page] = frame_num;
+	if(++frame_num ==128)
+		frame_num = 0;
+    }
+   
 return pa;
-
-
 }
 
 int main(){
@@ -64,6 +66,10 @@ int main(){
     int pa;
     char buffer[BUFFER_SIZE];
     
+    //initialize empty page table
+    for (int i=0; i<PAGES; i++){
+	page_table[i] = -1;
+    }
 
     FILE *fptr = fopen("addresses_1.txt", "r");
     if (fptr == NULL) {
