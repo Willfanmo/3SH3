@@ -36,7 +36,6 @@ bool TLB_search(int page){
     return false;
 }
 */
-
 int addr_translation(unsigned short va){
 
     int pa;
@@ -47,14 +46,18 @@ int addr_translation(unsigned short va){
 
 
 
-    if(page_table[page] !=-1)
+    if(page_table[page] !=-1 || page_table[page] == offset){
 	pa = page_table[page]*256+offset;
-    
+//printf("Frame %d  page_frame %d page %d  offset %d   ", frame_num, page_table[page], page, offset);
+    }
     else{
    	pa = frame_num*256+offset;
-	page_table[page] = frame_num;
-	if(++frame_num ==128)
-		frame_num = 0;
+ 	page_table[page] = frame_num;
+//printf("Frame %d  page_frame %d page %d  offset %d   ", frame_num, page_table[page], page, offset);
+
+
+	if(++frame_num ==128){
+		frame_num = 0;}
     }
    
 return pa;
