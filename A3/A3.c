@@ -12,6 +12,7 @@
 #define TLB_SIZE 16
 #define OFFSET_MASK 255
 #define OFFSET_BITS 8
+#define BUFFER_SIZE 32
 
 typedef struct {
     int page;
@@ -75,28 +76,32 @@ void TLB_Update(int page_num, int new_frame) {
     }
 }
 
-// Handles a page fault by copying the page from the backing store to physical memory,
-// updating the page table and TLB. Returns the frame number.
 int handle_page_fault(int page, char *backing_store) {
     int frame = next_frame;
-    memcpy(&physical_memory[frame * PAGE_SIZE], &backing_store[page * PAGE_SIZE], PAGE_SIZE);
     
-    // If the frame was previously used, mark that page as not in memory
+    signed char *dest_ptr = physical_memory + frame * PAGE_SIZE;  
+    char *src_ptr = backing_store + page * PAGE_SIZE;             
+    memcpy(dest_ptr, src_ptr, PAGE_SIZE);                         
+
     for (int i = 0; i < NUM_PAGES; i++) {
         if (page_table[i] == frame) {
             page_table[i] = -1;
             break;
         }
     }
-    
+
     page_table[page] = frame;
     TLB_Update(page, frame);
-    
     next_frame = (next_frame + 1) % NUM_FRAMES;
+
     return frame;
 }
 
+
 int main() {
+    int tlb_hits = 0;
+    int page_faults = 0;
+    int total_addresses = 0;
 
     // Set the page table and TLB to be all -1s, indicating entries is not in the memory
     for (int i = 0; i < NUM_PAGES; i++) {
@@ -108,8 +113,6 @@ int main() {
         tlb[i].frame = -1;
     }
     
-    int tlb_hits = 0;
-    int page_faults = 0;
     
     // Open BACKING_STORE.bin and map it to memory
     int fd = open("BACKING_STORE.bin", O_RDONLY);
@@ -123,24 +126,24 @@ int main() {
         exit(EXIT_FAILURE);
     }
     
-    // Open the file with logical addresses
-    FILE *fp = fopen("addresses.txt", "r");
-    if (fp == NULL) {
-        perror("Error opening addresses.txt");
-        exit(EXIT_FAILURE);
+    FILE *fptr = fopen("addresses.txt", "r");
+    char buff[BUFFER_SIZE];
+   
+    while (fgets(buff, BUFFER_SIZE, fptr) != NULL) {
+        int va = atoi(buff); 
+        int page_num = va >> OFFSET_BITS; 
+        int page_offset = va & OFFSET_MASK; 
+        int pa = translate_address(va, backing_store, &tlb_hits, &page_faults); 
+        signed char value = physical_memory[pa];
+        printf("Virtual addr is %d Physical add= %d Value= %d\n", va, pa, value);
+        total_addresses++;
     }
     
-    int logical_address;
-    while (fscanf(fp, "%d", &logical_address) != EOF) {
-        int physical_address = translate_address(logical_address, backing_store, &tlb_hits, &page_faults);
-        signed char value = physical_memory[physical_address];
-        printf("Virtual address: %d Physical address: %d Value: %d\n", logical_address, physical_address, value);
-    }
-    
+    printf("Total addresses = %d\n", total_addresses);
     printf("Page Faults: %d\n", page_faults);
     printf("TLB Hits: %d\n", tlb_hits);
     
-    fclose(fp);
+    fclose(fptr);
     munmap(backing_store, NUM_PAGES * PAGE_SIZE);
     close(fd);
     
