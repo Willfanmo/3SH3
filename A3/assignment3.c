@@ -137,13 +137,13 @@ int main() {
         int page_offset = va & OFFSET_MASK; 
         int pa = translate_address(va, backing_store, &tlb_hits, &page_faults); 
         signed char value = physical_memory[pa];
-        printf("Virtual addr is %d Physical add= %d Value= %d\n", va, pa, value);
+        printf("Virtual address: %d Physical address = %d Value= %d\n", va, pa, value);
         total_addresses++;
     }
     
     printf("Total addresses = %d\n", total_addresses);
-    printf("Page Faults: %d\n", page_faults);
-    printf("TLB Hits: %d\n", tlb_hits);
+    printf("Page_faults = %d\n", page_faults);
+    printf("TLB Hits = %d\n", tlb_hits);
     
     fclose(fptr);
     munmap(backing_store, NUM_PAGES * PAGE_SIZE);
