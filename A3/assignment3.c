@@ -1,132 +1,153 @@
-#include <sys/mman.h>
+/*
+Compilation
+	gcc assignment3.c -o A3
+Execution
+	./A3
+*/
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdint.h>
 #include <string.h>
 #include <fcntl.h>
-#include <stdlib.h>
-#include <stdio.h>
-/*
-2^16
-logical address space = 16
+#include <sys/mman.h>
+#include <unistd.h>
 
-page size = 256B
-Page offset = 8
-*/
-
-#define BUFFER_SIZE 10
-#define OFFSET_MASK 255 //changed
-#define PAGES 256 
+//define constants
+#define PAGE_SIZE 256
+#define NUM_PAGES 256      // 2^16 / 256 
+#define NUM_FRAMES 128     // 2^15 / 256
 #define TLB_SIZE 16
-#define PHYS_MEM 128
-
-#define OFFSET_BITS 8 //changed
-#define PAGE_SIZE 256 // changed
-
-#define INT_SIZE 4
-#define INT_COUNT 10
-#define MEMORY_SIZE INT_COUNT*INT_SIZE
+#define OFFSET_MASK 255
+#define OFFSET_BITS 8
+#define BUFFER_SIZE 32
 
 typedef struct {
-	int page_num;
-	int frame_num;
-} TLBentry;
+    int page;
+    int frame;
+} TLBEntry;
 
-int page_table[PAGES];
-int physical_memory[PHYS_MEM][PAGE_SIZE];
+TLBEntry tlb[TLB_SIZE];
+int tlb_index = 0;                                      // Index_num for tlb initialized to 0
+int page_table[NUM_PAGES];                              // Initialize the page_table  
+signed char physical_memory[NUM_FRAMES * PAGE_SIZE];
+int next_frame = 0;                                     // Next available frame (or FIFO replacement index)
 
-TLBentry TLB[TLB_SIZE];
+// Translates a logical address to a physical address, updating TLB hits and page fault counters.
+int translate_address(int logical_address, char *backing_store, int *tlb_hits, int *page_faults) {
+    int offset = logical_address & OFFSET_MASK;         // Lower 8 bits as offset
+    int page = logical_address >> OFFSET_BITS;     // Upper 8 bits as page number
+    int frame = search_TLB(page);
 
-int intArray[MEMORY_SIZE];
+    if (frame != -1) {
+        (*tlb_hits)++;
+    }
+    else {
+        frame = page_table[page];
+        if (frame == -1) {
+            (*page_faults)++;
+            frame = handle_page_fault(page, backing_store);
+        }
+        TLB_Add(page, frame);
+    }
+    return frame * PAGE_SIZE + offset;
+}
 
-signed char *mmapfptr;
-
-//int page_num = logical_address >> 8; // Get page number
-//int offset = logical_address & 0xFF; // Get offset within the page
-
-
+// Searches the frame_num for a given page_num, returns -1 if not found
 int search_TLB(int page_num) {
-    for (int i = 0; i < 16; i++) {
-        if (TLB[i].page_num == page_num) {
-            return TLB[i].frame_num;
+    for (int i = 0; i < TLB_SIZE; i++) {
+        if (tlb[i].page == page_num) {
+            return tlb[i].frame;
         }
     }
-    return -1;  // TLB miss
+    return -1;
 }
 
+// Adds an entry to the TLB
 void TLB_Add(int page_num, int frame_num) {
-    static int TLB_index = 0; // Keep track of the oldest entry (FIFO)
-    TLB[TLB_index].page_num = page_num;
-    TLB[TLB_index].frame_num = frame_num;
-    TLB_index = (TLB_index + 1) % 16; // Circular buffer
+    tlb[tlb_index].page = page_num;
+    tlb[tlb_index].frame = frame_num;
+    tlb_index = (tlb_index + 1) % TLB_SIZE;
 }
 
-int translate_address(int logical_address) {
-    int page_num = logical_address >> 8;
-    int offset = logical_address & 0xFF;
-
-    // Try to find the page in the TLB
-    int frame_num = search_TLB(page_num);
-    if (frame_num != -1) {
-        return (frame_num << 8) | offset;  // Return physical address
+// Updates the frame_num for a given page_num
+void TLB_Update(int page_num, int new_frame) {
+    for (int i = 0; i < TLB_SIZE; i++) {
+        if (tlb[i].page == page_num) {
+            tlb[i].frame = new_frame;
+            break;
+        }
     }
-
-    // TLB miss, check the page table
-    frame_num = page_table[page_num];
-    if (frame_num != -1) {
-        return (frame_num << 8) | offset;  // Return physical address
-    }
-
-    // Page fault, handle page fault (load from backing store)
-    handle_page_fault(page_num);
-    frame_num = page_table[page_num];
-    return (frame_num << 8) | offset;  // Return physical address
 }
 
-
-void handle_page_fault(int page_num) {
-    static int physical_mem_index = 0;  // FIFO replacement policy
-
-    // Find an empty frame or replace the oldest one
-    int frame_num = -1;
-    for (int i = 0; i < 128; i++) {
-        if (physical_memory[i] == -1) {
-            frame_num = i;
+int handle_page_fault(int page, char *backing_store) {
+    int frame = next_frame;
+    signed char *dest_ptr = physical_memory + frame * PAGE_SIZE;  
+    char *src_ptr = backing_store + page * PAGE_SIZE;             
+    memcpy(dest_ptr, src_ptr, PAGE_SIZE);                         
+    for (int i = 0; i < NUM_PAGES; i++) {
+        if (page_table[i] == frame) {
+            page_table[i] = -1;
             break;
         }
     }
 
-    if (frame_num == -1) {
-        frame_num = physical_mem_index;
-        physical_mem_index = (physical_mem_index + 1) % 128; // FIFO policy
-    }
+    page_table[page] = frame;
+    TLB_Update(page, frame);
+    next_frame = (next_frame + 1) % NUM_FRAMES;
 
-    // Load the page from the backing store into the frame
-    char buffer[256];
-    FILE *backing_store = fopen("BACKING_STORE.bin", "rb");
-    fseek(backing_store, page_num * 256, SEEK_SET);
-    fread(buffer, sizeof(char), 256, backing_store);
-    fclose(backing_store);
-
-    memcpy(&physical_memory[frame_num], buffer, 256);
-
-    // Update the page table and TLB
-    page_table[page_num] = frame_num;
-    TLB_Add(page_num, frame_num);  // Add the new mapping to the TLB
+    return frame;
 }
 
 
-int main(){
-    FILE *address_file = fopen("addresses_1.txt", "r");
-    if (address_file == NULL) {
-        perror("Failed to open address file");
-        return 1;
+int main() {
+    int tlb_hits = 0;
+    int page_faults = 0;
+    int total_addresses = 0;
+
+    // Initialize tables to empty, denoted by -1
+    for (int i = 0; i < NUM_PAGES; i++) {
+        page_table[i] = -1;
     }
 
-    int logical_address;
-    while (fscanf(address_file, "%d", &logical_address) != EOF) {
-        int physical_address = translate_address(logical_address);
-        printf("Logical Address: %d -> Physical Address: %d\n", logical_address, physical_address);
+    for (int i = 0; i < TLB_SIZE; i++) {
+        tlb[i].page = -1;
+        tlb[i].frame = -1;
+    }
+        
+    // Open BACKING_STORE.bin and map it to memory
+    int fd = open("BACKING_STORE_1.bin", O_RDONLY);
+    if (fd < 0) {
+        perror("Error opening BACKING_STORE_1.bin");
+        exit(EXIT_FAILURE);
     }
 
-    fclose(address_file);
+    char *backing_store = mmap(0, NUM_PAGES * PAGE_SIZE, PROT_READ, MAP_PRIVATE, fd, 0);
+
+    if (backing_store == MAP_FAILED) {
+        perror("Error with mmap");
+        exit(EXIT_FAILURE);
+    }
+    
+    FILE *fptr = fopen("addresses_1.txt", "r");
+    char buff[BUFFER_SIZE];
+   
+    while (fgets(buff, BUFFER_SIZE, fptr) != NULL) {
+        int va = atoi(buff); 
+        int page_num = va >> OFFSET_BITS; 
+        int page_offset = va & OFFSET_MASK; 
+        int pa = translate_address(va, backing_store, &tlb_hits, &page_faults); 
+        signed char value = physical_memory[pa];
+        printf("Virtual addr is %d Physical add= %d Value= %d\n", va, pa, value);
+        total_addresses++;
+    }
+    
+    printf("Total addresses = %d\n", total_addresses);
+    printf("Page Faults: %d\n", page_faults);
+    printf("TLB Hits: %d\n", tlb_hits);
+    
+    fclose(fptr);
+    munmap(backing_store, NUM_PAGES * PAGE_SIZE);
+    close(fd);
+    
     return 0;
-
 }
