@@ -137,7 +137,7 @@ int main() {
         int page_offset = va & OFFSET_MASK; 
         int pa = translate_address(va, backing_store, &tlb_hits, &page_faults); 
         signed char value = physical_memory[pa];
-        printf("Virtual address: %d Physical address = %d Value= %d\n", va, pa, value);
+        printf("Virtual address: %d Physical address = %d Value=%d\n", va, pa, value);
         total_addresses++;
     }
     
