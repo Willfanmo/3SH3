@@ -40,14 +40,14 @@ int main(int argc, char *argv[]) {
 
     printf("Total requests = %d\n", DISK_REQUESTS);
     printf("init_pos Head Position: %d\n", init_pos);
-    printf("Direction of Head: %s\n", direction);
+    printf("Direction of Head: %s\n\n", direction);
 
     int total_movement = 0;
     int current_pos = init_pos;
     int i;
 
     /* FCFS */
-    printf("FCFS DISK SCHEDULING ALGORITHM:\n");
+    printf("FCFS DISK SCHEDULING ALGORITHM:\n\n");
     total_movement = 0;
     current_pos = init_pos;
     for(i = 0; i < DISK_REQUESTS; i++){
@@ -57,10 +57,10 @@ int main(int argc, char *argv[]) {
         total_movement += abs(current_pos - requests[i]);
         current_pos = requests[i];
     }
-    printf("\nFCFS - Total head movements = %d\n", total_movement);
+    printf("\n\nFCFS - Total head movements = %d\n\n", total_movement);
 
     /* SSTF ALGORITHM */
-    printf("SSTF DISK SCHEDULING ALGORITHM \n");
+    printf("SSTF DISK SCHEDULING ALGORITHM \n\n");
     int sstf_order[DISK_REQUESTS];
     int serviced[DISK_REQUESTS] = {0};
     total_movement = 0;
@@ -86,7 +86,7 @@ int main(int argc, char *argv[]) {
         if(i != DISK_REQUESTS - 1)
             printf(", ");
     }
-    printf("\nSSTF - Total head movements = %d\n", total_movement);
+    printf("\n\nSSTF - Total head movements = %d\n\n", total_movement);
 
     /* Prepare a sorted copy for the following algorithms */
     int sorted[DISK_REQUESTS];
@@ -97,7 +97,7 @@ int main(int argc, char *argv[]) {
     // Sorted array now holds the request values in increasing order.
 
     /* SCAN ALGORITHM */
-    printf("SCAN DISK SCHEDULING ALGORITHM \n");
+    printf("SCAN DISK SCHEDULING ALGORITHM \n\n");
     total_movement = 0;
     current_pos = init_pos;
     int order_SCAN[DISK_REQUESTS], k = 0;
@@ -150,10 +150,10 @@ int main(int argc, char *argv[]) {
         if(i != DISK_REQUESTS - 1)
             printf(", ");
     }
-    printf("\nSCAN - Total head movements = %d\n", total_movement);
+    printf("\n\nSCAN - Total head movements = %d\n\n", total_movement);
 
     /* C-SCAN ALGORITHM */
-    printf("C-SCAN DISK SCHEDULING ALGORITHM \n");
+    printf("C-SCAN DISK SCHEDULING ALGORITHM \n\n");
     total_movement = 0;
     current_pos = init_pos;
     int order_CSCAN[DISK_REQUESTS];
@@ -211,10 +211,10 @@ int main(int argc, char *argv[]) {
         if(i != DISK_REQUESTS - 1)
             printf(", ");
     }
-    printf("\nC-SCAN - Total head movements = %d\n", total_movement);
+    printf("\n\nC-SCAN - Total head movements = %d\n\n", total_movement);
 
     /* LOOK ALGORITHM */
-    printf("LOOK DISK SCHEDULING ALGORITHM \n");
+    printf("LOOK DISK SCHEDULING ALGORITHM \n\n");
     total_movement = 0;
     current_pos = init_pos;
     int order_LOOK[DISK_REQUESTS];
@@ -272,10 +272,10 @@ int main(int argc, char *argv[]) {
         if(i != DISK_REQUESTS - 1)
             printf(", ");
     }
-    printf("\nLOOK - Total head movements = %d\n", total_movement);
+    printf("\n\nLOOK - Total head movements = %d\n\n", total_movement);
 
     /* C-LOOK ALGORITHM */
-    printf("C-LOOK DISK SCHEDULING ALGORITHM \n");
+    printf("C-LOOK DISK SCHEDULING ALGORITHM \n\n");
     total_movement = 0;
     current_pos = init_pos;
     int order_CLOOK[DISK_REQUESTS];
@@ -333,7 +333,7 @@ int main(int argc, char *argv[]) {
         if(i != DISK_REQUESTS - 1)
             printf(", ");
     }
-    printf("\nC-LOOK - Total head movements = %d\n", total_movement);
+    printf("\n\nC-LOOK - Total head movements = %d\n\n", total_movement);
 
     return 0;
 }
